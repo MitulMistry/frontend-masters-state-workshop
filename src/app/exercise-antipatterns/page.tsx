@@ -23,16 +23,18 @@ function FilteredDestinations() {
     { id: 3, name: 'New York', country: 'USA', rating: 4.3 },
   ]);
   const [filterRating, setFilterRating] = useState(4.5);
-  const [filteredDestinations, setFilteredDestinations] = useState<
-    typeof destinations
-  >([]);
+  // const [filteredDestinations, setFilteredDestinations] = useState<
+  //   typeof destinations
+  // >([]);
 
-  // This effect is unnecessary - we can derive filtered destinations
-  useEffect(() => {
-    setFilteredDestinations(
-      destinations.filter((dest) => dest.rating >= filterRating)
-    );
-  }, [destinations, filterRating]);
+  // // This effect is unnecessary - we can derive filtered destinations
+  // useEffect(() => {
+  //   setFilteredDestinations(
+  //     destinations.filter((dest) => dest.rating >= filterRating)
+  //   );
+  // }, [destinations, filterRating]);
+
+  const filteredDestinations = destinations.filter(dest => dest.rating >= filterRating);
 
   return (
     <Card>
@@ -83,12 +85,14 @@ function TripSummary() {
     { id: 2, name: 'Hotel', cost: 300 },
     { id: 3, name: 'Activities', cost: 200 },
   ]);
-  const [totalCost, setTotalCost] = useState(0);
+  // const [totalCost, setTotalCost] = useState(0);
 
   // This effect is unnecessary - we can derive total cost
-  useEffect(() => {
-    setTotalCost(tripItems.reduce((sum, item) => sum + item.cost, 0));
-  }, [tripItems]);
+  // useEffect(() => {
+  //   setTotalCost(tripItems.reduce((sum, item) => sum + item.cost, 0));
+  // }, [tripItems]);
+
+  const totalCost = tripItems.reduce((sum, item) => sum + item.cost, 0);
 
   return (
     <Card>
@@ -125,17 +129,28 @@ function TripSummary() {
 // Problem: Storing available dates in state when they can be derived from booked dates
 function AvailableDates() {
   const [bookedDates] = useState(['2024-06-01', '2024-06-02', '2024-06-03']);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  // const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   // This effect is unnecessary - we can derive available dates
-  useEffect(() => {
+  // useEffect(() => {
+  //   const allDates = Array.from({ length: 30 }, (_, i) => {
+  //     const date = new Date('2024-06-01');
+  //     date.setDate(date.getDate() + i);
+  //     return date.toISOString().split('T')[0];
+  //   });
+  //   setAvailableDates(allDates.filter((date) => !bookedDates.includes(date)));
+  // }, [bookedDates]);
+
+  const filterDates = () => {
     const allDates = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date('2024-06-01');
+      const date = new Date("2024-06-01");
       date.setDate(date.getDate() + i);
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     });
-    setAvailableDates(allDates.filter((date) => !bookedDates.includes(date)));
-  }, [bookedDates]);
+    return allDates.filter((date) => !bookedDates.includes(date));
+  };
+
+  const availableDates = filterDates();
 
   return (
     <Card>
@@ -177,20 +192,32 @@ function TripStatus() {
     isPaid: true,
     isConfirmed: true,
   });
-  const [status, setStatus] = useState('');
+  // const [status, setStatus] = useState('');
 
   // This effect is unnecessary - we can derive status
-  useEffect(() => {
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const start = new Date(trip.startDate);
+  //   const end = new Date(trip.endDate);
+
+  //   if (!trip.isPaid) setStatus('Payment Pending');
+  //   else if (!trip.isConfirmed) setStatus('Awaiting Confirmation');
+  //   else if (today < start) setStatus('Upcoming');
+  //   else if (today >= start && today <= end) setStatus('In Progress');
+  //   else setStatus('Completed');
+  // }, [trip]);
+
+  const getStatus = (): string => {
     const today = new Date();
     const start = new Date(trip.startDate);
     const end = new Date(trip.endDate);
 
-    if (!trip.isPaid) setStatus('Payment Pending');
-    else if (!trip.isConfirmed) setStatus('Awaiting Confirmation');
-    else if (today < start) setStatus('Upcoming');
-    else if (today >= start && today <= end) setStatus('In Progress');
-    else setStatus('Completed');
-  }, [trip]);
+    if (!trip.isPaid) return 'Payment Pending';
+    else if (!trip.isConfirmed) return 'Awaiting Confirmation';
+    else if (today < start) return 'Upcoming';
+    else if (today >= start && today <= end) return 'In Progress';
+    else return 'Completed';
+  }
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -207,6 +234,8 @@ function TripStatus() {
         return 'secondary' as const;
     }
   };
+
+  const status = getStatus();
 
   return (
     <Card>
