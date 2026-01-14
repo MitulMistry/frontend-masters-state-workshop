@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -267,16 +267,21 @@ function SearchResults() {
     { id: 3, name: 'City Hotel', price: 180, rating: 4.7 },
   ]);
   const [sortBy, setSortBy] = useState('price');
-  const [sortedResults, setSortedResults] = useState<typeof searchResults>([]);
+  // const [sortedResults, setSortedResults] = useState<typeof searchResults>([]);
 
   // This effect is unnecessary - we can derive sorted results
-  useEffect(() => {
-    const sorted = [...searchResults].sort((a, b) => {
-      if (sortBy === 'price') return a.price - b.price;
-      return b.rating - a.rating;
-    });
-    setSortedResults(sorted);
-  }, [searchResults, sortBy]);
+  // useEffect(() => {
+  //   const sorted = [...searchResults].sort((a, b) => {
+  //     if (sortBy === 'price') return a.price - b.price;
+  //     return b.rating - a.rating;
+  //   });
+  //   setSortedResults(sorted);
+  // }, [searchResults, sortBy]);
+
+  const sortedResults = [...searchResults].sort((a, b) => {
+    if (sortBy === 'price') return a.price - b.price;
+    return b.rating - a.rating;
+  });
 
   return (
     <Card>
@@ -329,37 +334,44 @@ function SearchResults() {
 // Problem: Using useState for timer ID when useRef should be used (doesn't need re-renders)
 function BookingTimer() {
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
-  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null); // ❌ Should use useRef
+  // const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null); // ❌ Should use useRef
+  const timerIdRef = useRef<NodeJS.Timeout | null>(null);
 
   const startTimer = () => {
+    const timerId = timerIdRef.current
     if (timerId) clearInterval(timerId);
 
     const id = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(id);
-          setTimerId(null); // ❌ Unnecessary re-render
+          timerIdRef.current = null;
+          // setTimerId(null); // ❌ Unnecessary re-render
           return 0;
         }
         return prev - 1;
-      });
+      });   
     }, 1000);
 
-    setTimerId(id); // ❌ Unnecessary re-render
+    timerIdRef.current = id;
+
+    // setTimerId(id); // ❌ Unnecessary re-render
   };
 
   const stopTimer = () => {
+    const timerId = timerIdRef.current;
     if (timerId) {
       clearInterval(timerId);
-      setTimerId(null); // ❌ Unnecessary re-render
+      timerIdRef.current = null;
+      // setTimerId(null); // ❌ Unnecessary re-render
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (timerId) clearInterval(timerId);
-    };
-  }, [timerId]); // ❌ Effect runs every time timerId changes
+  // useEffect(() => {
+  //   return () => {
+  //     if (timerId) clearInterval(timerId);
+  //   };
+  // }, [timerId]); // ❌ Effect runs every time timerId changes
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -407,17 +419,38 @@ function HotelGallery() {
     'hotel-pool.jpg',
     'hotel-restaurant.jpg',
   ]);
-  const [lastScrollPosition, setLastScrollPosition] = useState(0); // ❌ Should use useRef
+  // const [lastScrollPosition, setLastScrollPosition] = useState(0); // ❌ Should use useRef
+
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     const currentPosition = window.scrollY;
+
+  //     // We only need this for internal logic, not for rendering
+  //     setLastScrollPosition(currentPosition); // ❌ Causes unnecessary re-render
+
+  //     // Some scroll-based logic here...
+  //     if (currentPosition > lastScrollPosition) {
+  //       console.log('Scrolling down');
+  //     } else {
+  //       console.log('Scrolling up');
+  //     }
+  //   };
+
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, [lastScrollPosition]); // ❌ Effect re-runs on every scroll
+
+  const lastScrollPosition = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentPosition = window.scrollY;
 
       // We only need this for internal logic, not for rendering
-      setLastScrollPosition(currentPosition); // ❌ Causes unnecessary re-render
+      lastScrollPosition.current = currentPosition;
 
       // Some scroll-based logic here...
-      if (currentPosition > lastScrollPosition) {
+      if (currentPosition > lastScrollPosition.current) {
         console.log('Scrolling down');
       } else {
         console.log('Scrolling up');
@@ -426,7 +459,7 @@ function HotelGallery() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollPosition]); // ❌ Effect re-runs on every scroll
+  }, []); // ❌ Effect re-runs on every scroll
 
   return (
     <Card>
@@ -449,7 +482,7 @@ function HotelGallery() {
           ))}
         </div>
         <div className="mt-4 text-xs text-muted-foreground">
-          Debug: Last scroll position: {lastScrollPosition}px
+          Debug: Last scroll position: {lastScrollPosition.current}px
         </div>
       </CardContent>
     </Card>
