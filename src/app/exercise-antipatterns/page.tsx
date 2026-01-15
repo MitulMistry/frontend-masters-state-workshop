@@ -496,15 +496,21 @@ function FlightSearch() {
   const [searchResults, setSearchResults] = useState<
     Array<{ id: number; flight: string; price: number }>
   >([]);
-  const [searchCount, setSearchCount] = useState(0); // ❌ Should use useRef
-  const [lastSearchTime, setLastSearchTime] = useState<number | null>(null); // ❌ Should use useRef
+  // const [searchCount, setSearchCount] = useState(0); // ❌ Should use useRef
+  // const [lastSearchTime, setLastSearchTime] = useState<number | null>(null); // ❌ Should use useRef
+
+  const searchCount = useRef(0);
+  const lastSearchTime = useRef<number | null>(null);
 
   const handleSearch = async () => {
     const now = Date.now();
 
     // Track search analytics (doesn't affect UI)
-    setSearchCount((prev) => prev + 1); // ❌ Unnecessary re-render
-    setLastSearchTime(now); // ❌ Unnecessary re-render
+    // setSearchCount((prev) => prev + 1); // ❌ Unnecessary re-render
+    // setLastSearchTime(now); // ❌ Unnecessary re-render
+
+    searchCount.current = searchCount.current + 1;
+    lastSearchTime.current = now;
 
     // Simulate API call
     setTimeout(() => {
@@ -515,7 +521,11 @@ function FlightSearch() {
     }, 1000);
 
     // Analytics logic that doesn't need to trigger re-renders
-    if (lastSearchTime && now - lastSearchTime < 1000) {
+    // if (lastSearchTime && now - lastSearchTime < 1000) {
+    //   console.log('User is searching too quickly');
+    // }
+
+    if (lastSearchTime.current && now - lastSearchTime.current < 1000) {
       console.log('User is searching too quickly');
     }
   };
@@ -556,7 +566,7 @@ function FlightSearch() {
         )}
 
         <div className="text-xs text-muted-foreground border-t pt-2">
-          Debug: Search count: {searchCount}, Last search: {lastSearchTime}
+          Debug: Search count: {searchCount.current}, Last search: {lastSearchTime.current}
         </div>
       </CardContent>
     </Card>
@@ -589,13 +599,21 @@ function HotelSelection() {
       amenities: ['WiFi', 'Pool', 'Beach Access'],
     },
   ]);
-  const [selectedHotel, setSelectedHotel] = useState<(typeof hotels)[0] | null>(
-    null
-  ); // ❌ Storing entire object
+  // const [selectedHotel, setSelectedHotel] = useState<(typeof hotels)[0] | null>(
+  //   null
+  // ); // ❌ Storing entire object
 
-  const handleHotelSelect = (hotel: (typeof hotels)[0]) => {
-    setSelectedHotel(hotel); // ❌ Storing the entire hotel object instead of just the ID!
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
+
+  // const handleHotelSelect = (hotel: (typeof hotels)[0]) => {
+  //   setSelectedHotel(hotel); // ❌ Storing the entire hotel object instead of just the ID!
+  // };
+
+    const handleHotelSelect = (hotelId: string) => {
+    setSelectedHotelId(hotelId);
   };
+
+  const selectedHotel = selectedHotelId && hotels.find(hotel => hotel.id === selectedHotelId);
 
   return (
     <Card>
@@ -609,14 +627,23 @@ function HotelSelection() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           {hotels.map((hotel) => (
+            // <div
+            //   key={hotel.id}
+            //   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+            //     selectedHotel?.id === hotel.id
+            //       ? 'border-primary bg-primary/5'
+            //       : 'hover:bg-accent'
+            //   }`}
+            //   onClick={() => handleHotelSelect(hotel)}
+            // >
             <div
               key={hotel.id}
               className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                selectedHotel?.id === hotel.id
+                selectedHotelId === hotel.id
                   ? 'border-primary bg-primary/5'
                   : 'hover:bg-accent'
               }`}
-              onClick={() => handleHotelSelect(hotel)}
+              onClick={() => handleHotelSelect(hotel.id)}
             >
               <div className="flex items-center justify-between">
                 <div>
